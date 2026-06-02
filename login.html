@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plague horizon — Login</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="auth.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+    <a class="brand" href="index.html">
+        <img
+          src="zombie.png"
+          alt="Plague horizon logo"
+        />
+        <span>PLAGUE HORIZON</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="Leaderboard.html">Leaderboard</a>
+        <a id="nav-auth-link" class="active" href="login.html">Login/Register</a>
+        <a href="play.html" id="nav-play-link">Play</a>
+        <button type="button" class="btn btn-ghost nav-logout" id="nav-logout">
+          Log out
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <h1 class="page-title">Welcome back</h1>
+      <p class="page-sub">Sign in to sync progress and cosmetics.</p>
+
+      <div class="grid-2" style="align-items: start">
+        <figure class="img-frame">
+          <img
+            src="game photo 4.jpg"
+            alt="Player character preparing for a survival run"
+            width="800"
+            height="500"
+          />
+          <figcaption class="img-caption">
+            Sign in to continue your ranked progress.
+          </figcaption>
+        </figure>
+
+        <div class="panel form-stack">
+          <h2>Sign in</h2>
+          <form id="login-form" action="#" method="post">
+            <p
+              id="login-feedback"
+              class="form-feedback"
+              aria-live="polite"
+              hidden
+            ></p>
+            <div class="form-group">
+              <label for="email">Email or username</label>
+              <input id="email" name="email" type="text" autocomplete="username" placeholder="you@example.com" />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Log in</button>
+              <a class="btn btn-ghost" href="register.html">Don't have an account? Register</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">&copy; 2026 Plague horizon. All rights reserved</footer>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var form = document.getElementById("login-form");
+        var feedback = document.getElementById("login-feedback");
+        if (!form) return;
+
+        function setFeedback(message, variant) {
+          if (!feedback) return;
+          variant = variant || "error";
+          if (!message) {
+            feedback.hidden = true;
+            feedback.textContent = "";
+            feedback.className = "form-feedback";
+            feedback.removeAttribute("role");
+            return;
+          }
+          feedback.hidden = false;
+          feedback.textContent = message;
+          feedback.className = "form-feedback form-feedback--" + variant;
+          feedback.setAttribute("role", variant === "success" ? "status" : "alert");
+        }
+
+        if (new URLSearchParams(window.location.search).get("next") === "play.html") {
+          setFeedback("Sign in to open the Play area.", "neutral");
+        }
+
+        // Check if user is already logged in
+        if (window.PHAuth && window.PHAuth.getUser()) {
+          setFeedback("You are already logged in.", "neutral");
+          // Disable the login form
+          var inputs = form.querySelectorAll("input, button");
+          inputs.forEach(function(input) {
+            input.disabled = true;
+          });
+          // Disable the register link
+          var registerLink = document.querySelector('a[href="register.html"]');
+          if (registerLink) {
+            registerLink.style.pointerEvents = "none";
+            registerLink.style.opacity = "0.5";
+          }
+        }
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          setFeedback("");
+          var email = document.getElementById("email").value.trim();
+          var password = document.getElementById("password").value;
+          if (!email || !password) {
+            setFeedback("Please enter your email or username and password.");
+            return;
+          }
+          if (!window.PHAuth) {
+            setFeedback("Could not load sign-in. Please refresh the page.");
+            return;
+          }
+          if (window.PHAuth.getAccounts().length === 0) {
+            setFeedback(
+              "No registered players yet. Please create an account on the Register page first.",
+              "neutral"
+            );
+            return;
+          }
+          var sessionUser = window.PHAuth.loginWithCredentials(email, password);
+          if (!sessionUser) {
+            setFeedback("Email/username or password does not match our records.");
+            return;
+          }
+          window.PHAuth.setUser(sessionUser);
+          var next = new URLSearchParams(window.location.search).get("next");
+          window.location.href =
+            next === "play.html" ? "play.html" : "index.html";
+        });
+      });
+    </script>
+  </body>
+</html>
